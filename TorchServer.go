@@ -19,6 +19,18 @@ import (
 	"./ServerUtils"
 )
 
+var appid string
+var secret string
+
+func init() {
+	fileObj, _ := os.OpenFile("config.cfg", os.O_RDONLY, 0644)
+	defer fileObj.Close()
+	content, _ := ioutil.ReadAll(fileObj)
+	cfg, _ = JsonToMap(string(content))
+	appid = cfg["appid"].(string)
+	secret = cfg["secret"].(string)
+}
+
 func main() {
 	// Echo instance
 	e := echo.New()
@@ -43,7 +55,7 @@ func main() {
 
 func LoginSession(c echo.Context) error {
 	js_code := c.QueryParam("code")
-	wxApi := fmt.Sprintf("https://api.weixin.qq.com/sns/jscode2session?appid=%+v&secret=%+v&js_code=%+v&grant_type=authorization_code", js_code)
+	wxApi := fmt.Sprintf("https://api.weixin.qq.com/sns/jscode2session?appid=%+v&secret=%+v&js_code=%+v&grant_type=authorization_code", appid, secret, js_code)
 	client := &http.Client{}
 	client.Timeout = 5 * time.Second
 	req, _ := http.NewRequest("GET", wxApi, nil)
