@@ -78,11 +78,24 @@ func FindUser(openid string) interface{} {
 	return result["playlist"]
 }
 
-func FindPlaylist(playlist_id string) interface{} {
+func FindPlaylist(playlist_id string) []interface{} {
 	var result map[string]interface{}
 	c := database.C("playlist")
 	c.Find(bson.M{"playlist_id": playlist_id}).Select(bson.M{"musicList": 1, "_id": 0}).One(&result)
-	return result["musicList"]
+	musicList := result["musicList"].([]string)
+	var ret []interface{}
+	for _, mid := range musicList {
+		v := FindMusic(mid)
+		ret = append(ret, v)
+	}
+	return ret
+}
+
+func FindMusic(mid string) interface{} {
+	var result map[string]interface{}
+	c := database.C("music")
+	c.Find(bson.M{"mid": mid}).Select(bson.M{"_id": 0, "mid": 1, "encode_1": 1, "encode_2": 1}).One(&result)
+	return result
 }
 
 func main() {

@@ -26,7 +26,7 @@ func init() {
 	fileObj, _ := os.OpenFile("config.cfg", os.O_RDONLY, 0644)
 	defer fileObj.Close()
 	content, _ := ioutil.ReadAll(fileObj)
-	cfg, _ = JsonToMap(string(content))
+	cfg, _ := JsonToMap(string(content))
 	appid = cfg["appid"].(string)
 	secret = cfg["secret"].(string)
 }
@@ -40,8 +40,8 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Routes
-	e.POST("/addtorch", AddTorch)
-	e.POST("/gettorch", GetTorch)
+	// e.POST("/addtorch", AddTorch)
+	e.GET("/getml", GetMusicList)
 	e.GET("/test", ServerTestGet)  // ok
 	e.GET("/session", LoginSession)
 	e.GET("/login", LoginUser)
@@ -95,6 +95,13 @@ func LoginUser(c echo.Context) error {
 	return c.String(http.StatusOK, MapToJson(playlist))
 }
 
+func GetMusicList(c echo.Context) error {
+	playlist_id := c.QueryParam("playlist_id")
+	musicList := ServerUtils.FindPlaylist(playlist_id)
+	// fmt.Println(musicList)
+	return c.String(http.StatusOK, MapToJson(musicList))
+}
+
 // post
 func AddTorch(c echo.Context) error {
 	body, _ := ioutil.ReadAll(c.Request().Body)
@@ -103,14 +110,6 @@ func AddTorch(c echo.Context) error {
 	fmt.Println(data)
 	return c.String(http.StatusOK, "200")
 }
-
-func GetTorch(c echo.Context) error {
-	playlist_id := c.QueryParam("playlist_id")
-	musicList := ServerUtils.FindPlaylist(playlist_id)
-	fmt.Println(musicList)
-	return c.String(http.StatusOK, MapToJson(musicList))
-}
-
 
 func ServerTestGet(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
