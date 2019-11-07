@@ -82,10 +82,10 @@ func FindPlaylist(playlist_id string) []interface{} {
 	var result map[string]interface{}
 	c := database.C("playlist")
 	c.Find(bson.M{"playlist_id": playlist_id}).Select(bson.M{"musicList": 1, "_id": 0}).One(&result)
-	musicList := result["musicList"].([]string)
+	musicList := result["musicList"].([]interface{})
 	var ret []interface{}
 	for _, mid := range musicList {
-		v := FindMusic(mid)
+		v := FindMusic(mid.(string))
 		ret = append(ret, v)
 	}
 	return ret
@@ -94,7 +94,7 @@ func FindPlaylist(playlist_id string) []interface{} {
 func FindMusic(mid string) interface{} {
 	var result map[string]interface{}
 	c := database.C("music")
-	c.Find(bson.M{"mid": mid}).Select(bson.M{"_id": 0, "mid": 1, "encode_1": 1, "encode_2": 1}).One(&result)
+	c.Find(bson.M{"mid": mid}).Select(bson.M{"_id": 0, "title": 1, "mid": 1, "encode_1": 1, "encode_2": 1}).One(&result)
 	return result
 }
 
