@@ -84,7 +84,7 @@ func LoginUser(c echo.Context) error {
 	fileObj, _ := os.OpenFile(tmpFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	fileObj.WriteString(content)
 	fileObj.Close()
-	cmd := exec.Command("python", "decode.py", tmpFile)
+	cmd := exec.Command("python", "-u", "decode.py", tmpFile)
 	buf, _ := cmd.Output()
 	data, _ := JsonToMap(string(buf))
 	openid := data["openId"].(string)

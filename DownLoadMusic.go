@@ -12,8 +12,16 @@ import (
 	"os"
 	// "encoding/json"
 	"regexp"
+	"flag"
+	"os/exec"
 	"path/filepath"
 )
+
+var playlist string
+
+func init() {
+	flag.StringVar(&playlist, "playlist", "", "playlist id")
+}
 
 func getPlayList(playListUrl string) (string, string, [][]string) {
 	client := &http.Client{}
@@ -138,5 +146,33 @@ func GetMusicFromUrl(url string) {
 }
 
 func main() {
-	GetMusicFromUrl("https://music.163.com/playlist?id=112545205&userid=95741719")
+	flag.Parse()
+	if playlist != "" {
+		url := "https://music.163.com/playlist?id=" + playlist
+		fmt.Println(url)
+		GetMusicFromUrl(url)
+		cmd := exec.Command("python", "-u", "Encoder_main.py", playlist)
+		stdout, err := cmd.StdoutPipe()
+		cmd.Stderr = cmd.Stdout
+		if err != nil {
+			fmt.Println(err)
+		}
+		if err = cmd.Start(); err != nil {
+			fmt.Println(err)
+		}
+		// 从管道中实时获取输出并打印到终端
+		for {
+			tmp := make([]byte, 1024)
+			n, err := stdout.Read(tmp)
+			fmt.Print(string(tmp[0:n]))
+			if err != nil {
+				break
+			}
+		}
+		if err = cmd.Wait(); err != nil {
+			fmt.Println(err)
+		}
+		// buf, _ := cmd.Output()
+		// fmt.Println(string(buf))
+	}
 }
