@@ -43,9 +43,20 @@ func init() {
 
 }
 
-func SignUserMongo(openid string, playlist []map[string]string) {
+func SignUserMongo(openid string, playlist_id string) {
+	var result map[string]interface{}
+	var playlist map[string]interface{}
+	var pl = make(map[string]interface{})
+	b := database.C("playlist")
+	b.Find(bson.M{"playlist_id": playlist_id}).Select(bson.M{"_id": 0, "playlist_id": 1, "playlist_name": 1, "album_url": 1}).One(&playlist)
+
 	c := database.C("user")
-	c.Insert(bson.M{"openid": openid, "playlist": playlist})
+	err := c.Find(bson.M{"openid": openid}).Select(bson.M{"_id": 0}).One(&result)
+	if err == nil {
+		pl = result["playlist"].(map[string]interface{})
+	}
+	pl[playlist["playlist_id"].(string)] = playlist
+	c.Upsert(bson.M{"openid": openid}, bson.M{"openid": openid, "playlist": pl})
 }
 
 func UpsertPlayListMongo(playlist_id string, playlist_name string, album_url string, midList []string) {
@@ -72,10 +83,14 @@ func InsertMusic(mid, filename, filetitle string) {
 }
 
 func FindUser(openid string) interface{} {
+	var playlist []interface{}
 	var result map[string]interface{}
 	c := database.C("user")
 	c.Find(bson.M{"openid": openid}).Select(bson.M{"playlist": 1, "_id": 0}).One(&result)
-	return result["playlist"]
+	for _, v := range result["playlist"].(map[string]interface{}) {
+		playlist = append(playlist, v)
+	}
+	return playlist
 }
 
 func FindPlaylist(playlist_id string) []interface{} {
@@ -97,21 +112,3 @@ func FindMusic(mid string) interface{} {
 	c.Find(bson.M{"mid": mid}).Select(bson.M{"_id": 0, "title": 1, "mid": 1, "encode_1": 1, "encode_2": 1}).One(&result)
 	return result
 }
-
-func main() {
-	var playlist []map[string]string
-	playlist = append(playlist, map[string]string{"pl_id": "112545205", "pl_name": "自强番茄喜欢的音乐", "pl_url": "http://p1.music.126.net/UCuTwLDEDVWSeMIG2DBAoQ==/19094118928164389.jpg"})
-	// playlist["112545205"] = "自强番茄喜欢的音乐"
-	SignUserMongo("oZxug4uNQw8Xnxe8k6FJsfGvdqlQ", playlist)
-}
-
-// func GetConfigSettings() map[string]interface{} {
-// 	config := make(map[string]interface{})
-// 	var result []map[string]interface{}
-// 	c := settingsDatabase.C("config")
-// 	c.Find(bson.M{}).Select(bson.M{"_id": 0}).All(&result)
-// 	for _, i := range result {
-// 		config[i["name"].(string)] = i
-// 	}
-// 	return config
-// }

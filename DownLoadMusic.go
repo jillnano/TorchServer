@@ -18,9 +18,13 @@ import (
 )
 
 var playlist string
+var user string
+var bind bool
 
 func init() {
 	flag.StringVar(&playlist, "playlist", "", "playlist id")
+	flag.StringVar(&user, "user", "", "user openid")
+	flag.BoolVar(&bind, "bind", false, "bind")
 }
 
 func getPlayList(playListUrl string) (string, string, [][]string) {
@@ -147,7 +151,9 @@ func GetMusicFromUrl(url string) {
 
 func main() {
 	flag.Parse()
-	if playlist != "" {
+	if bind && playlist != "" && user != "" {
+		ServerUtils.SignUserMongo(user, playlist)
+	} else if playlist != "" {
 		url := "https://music.163.com/playlist?id=" + playlist
 		fmt.Println(url)
 		GetMusicFromUrl(url)
