@@ -86,9 +86,13 @@ func FindUser(openid string) interface{} {
 	var playlist []interface{}
 	var result map[string]interface{}
 	c := database.C("user")
-	c.Find(bson.M{"openid": openid}).Select(bson.M{"playlist": 1, "_id": 0}).One(&result)
-	for _, v := range result["playlist"].(map[string]interface{}) {
-		playlist = append(playlist, v)
+	err := c.Find(bson.M{"openid": openid}).Select(bson.M{"playlist": 1, "_id": 0}).One(&result)
+	if err != nil {
+		c.Insert(bson.M{"openid": openid, "playlist": make(map[string]interface{})})
+	} else {
+		for _, v := range result["playlist"].(map[string]interface{}) {
+			playlist = append(playlist, v)
+		}
 	}
 	return playlist
 }
